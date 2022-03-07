@@ -16,7 +16,10 @@ NUM_MAX_AGENTS=10
 CREDENTIALFILE=""
 MEM_WORKER=0
 
-while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:" flag
+PARAMETERS=""
+
+
+while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:P:" flag
   do
     case $flag in
         C)
@@ -58,6 +61,9 @@ while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:" flag
 		S)
 		  SCRIPT="${OPTARG}"
 		  ;;
+        P)
+          PARAMETERS="${OPTARG}"
+          ;;
     esac
   done
 
@@ -161,5 +167,5 @@ export SPARK_PARAMETERS="${SPARK_PYTHON_OPTIONS} --conf=spark.eventLog.dir=/var/
 
 export LOCAL_SPARK_JAVA_OPTS="--conf spark.shuffle.service.enabled=true --conf spark.rpc.askTimeout=${TIMEOUT} --conf spark.network.timeout=${TIMEOUT}"
 
-${SPARK_HOME}/bin/spark-submit --name "${TASKNAME}:${SITE_NAME}" ${SPARK_PARAMETERS} ${LOCAL_SPARK_JAVA_OPTS} ${SCRIPT}
+${SPARK_HOME}/bin/spark-submit --name "${TASKNAME}:${SITE_NAME}" ${SPARK_PARAMETERS} ${LOCAL_SPARK_JAVA_OPTS} ${SCRIPT} ${PARAMETERS}
 

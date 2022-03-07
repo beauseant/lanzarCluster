@@ -4,6 +4,11 @@ Ejemplo de como lanzar un script de PySpark en el cluster del TSC sin usar noteb
 
 El código es una modificación de los scripts iniciales creados por https://github.com/hmolina
 
+## Modificación 7 de Marzo 
+
+Se ha añadido la posibilidad de pasar parámetros al script. En el ejemplo hay dos parámetros, uno con el path (-p) y otro de test (-t) Ambos obligatorios.
+
+
 ## Generar token de acceso.
 
 Antes de poder usar el cluster debemos tener un token de acceso, para ello debemos ir a:
@@ -39,7 +44,7 @@ El ejemplo propuesto lee un fichero de texto en la línea número 21 del fichero
 
 Con todos los pasos anteriores listos ya estamos en condiciones de lanzar el código. En la misma consola que hemos definido el path de python nos dirijimos al directorio del proyecto y escribimos el comando:
 
-./script-spark  -C tokencluster.json -c 4 -N 10  -S test.py 
+./script-spark  -C tokencluster.json -c 4 -N 10  -S test.py -P "-p file:///export/usuarios01/sblanco/lanzarCluster/data/texto.txt -t test"
 
 Donde script_spark es el script de Linux que prepara el entorno, tokencluster.json es el fichero con el token y test.py es el programa principal. En este caso estamos lanzando 10 máquinas con 4 hilos de ejecución en cada una.
 
