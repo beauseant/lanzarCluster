@@ -17,6 +17,7 @@ CREDENTIALFILE=""
 MEM_WORKER=0
 
 PARAMETERS=""
+CONSTRAINTS=""
 
 
 while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:P:" flag
@@ -38,7 +39,7 @@ while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:P:" flag
 		  SVERSION=${OPTARG}
 		;;
 		F)
-		  PYSPARK_CONFIG_FILE_OPT="--config=/export/usuarios01/hmolina/.jupyter/${OPTARG}.py"
+		  PYSPARK_CONFIG_FILE_OPT="--config=${HOME}/.jupyter/${OPTARG}.py"
 		;;
 		H)
 		  MESOS_MASTER="${OPTARG}"
@@ -61,6 +62,9 @@ while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:P:" flag
 		S)
 		  SCRIPT="${OPTARG}"
 		  ;;
+                X)
+                  CONSTRAINTS="${OPTARG}"
+                  ;;
         P)
           PARAMETERS="${OPTARG}"
           ;;
@@ -157,6 +161,11 @@ export LD_PRELOAD=/opt/intel/composerxe/compiler/lib/intel64/libiomp5.so:/opt/in
 export SPARK_DRIVER_OPTS="--conf spark.driver.maxResultSize=${MEMORY_MAX} --conf spark.local.dir=/export/workdir/spark/tmp --driver-memory 20G --driver-cores 8 --driver-class-path /etc/hadoop/hdfs-site.xml:/etc/hadoop/core-site.xml:/etc/hadoop --conf spark.sql.warehouse.dir=${HIVE_DB_PATH} --conf spark.mesos.role=${USER}"
 
 export SPARK_EXECUTOR_OPTS="--conf spark.shuffle.io.connectionTimeout=180000 --executor-memory ${MEM_WORKER}G --conf spark.executor.cores=${CORES}  --conf spark.cores.max=${NUM_MAX_CORES} --conf spark.shuffle.service.enabled=true --conf spark.executorEnv.LD_PRELOAD=${LD_PRELOAD} --conf spark.executorEnv.PYTHONHASHSEED=${PYTHONHASHSEED}"
+
+if [ "X${CONSTRAINTS}" != "" ]
+then
+  export SPARK_EXECUTOR_OPTS="${SPARK_EXECUTOR_OPTS} --conf spark.mesos.constraints=${CONSTRAINTS}"
+fi
 
 if [ "${GPU_MAX}" -gt 0 ]
 then
