@@ -50,5 +50,16 @@ Donde script_spark es el script de Linux que prepara el entorno, tokencluster.js
 
 Evidentemente el script debe lanzarse desde alguna de las máquinas con acceso al cluster. En el caso del grupo ML4DS el lugar obvio es usar cualquiera de las hators.
 
+Para especificar la arquitectura a usar, se ha agregado la opcion -X
+./script-spark  -C tokencluster.json -c 4 -N 10  -S test.py -P "-p file:///export/usuarios01/sblanco/lanzarCluster/data/texto.txt -t test" -X "cpu_arch:ARCH"
 
+Donde los valores de arch son (de más antiguo a nuevo):
+* core2
+* nehalem
+* westmere
+* sandybridge
+* ivybridge
+* broadwell
+* cascadelake
 
+NO abusar de esta opcion
