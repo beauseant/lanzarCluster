@@ -1,5 +1,4 @@
 #!/bin/bash
-COARSE_FLAG=false
 CORES=64
 TIMEOUT=300
 SVERSION=3.1.1
@@ -11,6 +10,7 @@ SPARK_NLP=1
 PACKAGES_CMD=""
 HIVE_DB_PATH="${HOME}/.hive/"
 RUNNING_DIRECTORY="."
+export EXTRA_SPARK_CLASSPATH=""
 
 export PYSPARK_PYTHON=python3
 export PYSPARK_DRIVER_PYTHON=jupyter
@@ -19,9 +19,10 @@ export GPU_MAX=0
 NUM_MAX_AGENTS=10
 CREDENTIALFILE=""
 CONSTRAINTS=""
+EXTRA_JARS=""
 MEM_WORKER=0
 
-while getopts "C:c:n:T:V:F:M:H:L:2G:N:t:W:D:X:" flag
+while getopts "C:c:n:T:V:F:H:2G:N:t:W:D:X:J:" flag
   do
     case $flag in
         C)
@@ -33,40 +34,47 @@ while getopts "C:c:n:T:V:F:M:H:L:2G:N:t:W:D:X:" flag
         n)
           TASKNAME="$OPTARG"
         ;;
-		T)
-		  TIMEOUT=${OPTARG}
-		;;
-		V)
-		  SVERSION=${OPTARG}
-		;;
-		F)
-		  PYSPARK_CONFIG_FILE_OPT="--config=${HOME}/.jupyter/${OPTARG}.py"
-		;;
-		H)
-		  MESOS_MASTER="${OPTARG}"
-		;;
-		t)
-		  MEMORY_MAX=${OPTARG}
-		;;
-		2)
-		  export PYSPARK_PYTHON=python2
-		  export SPARK_PYTHON_OPTIONS="--conf spark.pyspark.python=/usr/bin/python2 --conf spark.pyspark.driver.python=/usr/bin/jupyter"
-		;;
-		G)
-		  GPU_MAX=${OPTARG}
-		  ;;
-		N)
-		  NUM_MAX_AGENTS=${OPTARG}
-		  ;;
-		W)
-		  MEM_WORKER=${OPTARG}
-		  ;;
-		D)
-		  RUNNING_DIRECTORY="${OPTARG}"
-		  ;;
-		X)
-		  CONSTRAINTS="${OPTARG}"
-		  ;;
+        T)
+          TIMEOUT=${OPTARG}
+        ;;
+        V)
+          SVERSION=${OPTARG}
+        ;;
+        F)
+          PYSPARK_CONFIG_FILE_OPT="--config=${HOME}/.jupyter/${OPTARG}.py"
+        ;;
+        H)
+          MESOS_MASTER="${OPTARG}"
+        ;;
+        t)
+          MEMORY_MAX=${OPTARG}
+        ;;
+        2)
+          export PYSPARK_PYTHON=python2
+          export SPARK_PYTHON_OPTIONS="--conf spark.pyspark.python=/usr/bin/python2 --conf spark.pyspark.driver.python=/usr/bin/jupyter"
+        ;;
+        G)
+          GPU_MAX=${OPTARG}
+          ;;
+        N)
+          NUM_MAX_AGENTS=${OPTARG}
+          ;;
+        W)
+          MEM_WORKER=${OPTARG}
+          ;;
+        D)
+          RUNNING_DIRECTORY="${OPTARG}"
+          ;;
+        X)
+          CONSTRAINTS="${OPTARG}"
+          ;;
+        J)
+          EXTRA_JARS="${OPTARG}"
+          ;;
+        *)
+          printf "Parametro desconocido\n"
+          exit 255
+          ;;
     esac
   done
 
@@ -103,24 +111,24 @@ then
   HADOOP_VERSION=3.3.0
 else
   printf "Imposible determinar version HADOOP\n"
-  exit -1
+  exit 255
 fi
 
-export SITE_NAME=`uname -n`
-SPARK_VH=`echo $SVERSION | cut -d . -f 1 `
-SPARK_VL=`echo $SVERSION | cut -d . -f 2 `
-HIVE_DB_PATH_M=`uname -n`
-HIVE_DB_PATH="${HIVE_DB_PATH}/${HIVE_DB_PATH_M}.$$"
+export SITE_NAME=$( uname -n )
+export SPARK_VH=$( echo ${SVERSION} | cut -d . -f 1 )
+export SPARK_VL=$( echo ${SVERSION} | cut -d . -f 2 )
+export HIVE_DB_PATH_M=$( uname -n )
+export HIVE_DB_PATH="${HIVE_DB_PATH}/${HIVE_DB_PATH_M}.$$"
 export SPARK_DIST_CLASSPATH=$( /opt/hadoop/bin/hadoop classpath )
 
-if [ ! -d $HIVE_DB_PATH ]
+if [ ! -d "${HIVE_DB_PATH}" ]
 then
-  mkdir -p $HIVE_DB_PATH
+  mkdir -p "${HIVE_DB_PATH}"
 fi
 
 HIVE_DB_PATH="file://${HIVE_DB_PATH}"
 
-if [ $SPARK_VH  -lt 2 ]
+if [ ${SPARK_VH}  -lt 2 ]
 then
   export PACKAGES_CMD="${PACKAGES_CMD} --packages com.databricks:spark-csv_2.11:1.2.0"
   export PYTHONHASHSEED=1
@@ -142,7 +150,13 @@ fi
 
 if [ ${SPARK_NLP} -gt 0 ]
 then
-  export PACKAGES_CMD="${PACKAGES_CMD} --packages com.johnsnowlabs.nlp:spark-nlp_2.12:3.4.1"
+#  export PACKAGES_CMD="${PACKAGES_CMD} --packages com.johnsnowlabs.nlp:spark-nlp_2.12:3.4.1"
+  export PACKAGES_CMD="${PACKAGES_CMD} --jars hdfs://DTSCHDFSCluster/usr/lib/spark-nlp-assembly-3.4.0.jar"
+fi
+
+if [ "X${EXTRA_JARS}" != "X" ]
+then
+  export PACKAGES_CMD="${PACKAGES_CMD} --jars ${EXTRA_JARS}"
 fi
 
 export MESOS_SECURITY=""
@@ -166,7 +180,7 @@ export SPARK_DRIVER_OPTS="--conf spark.driver.maxResultSize=${MEMORY_MAX} --conf
 
 export SPARK_EXECUTOR_OPTS="--conf spark.shuffle.io.connectionTimeout=180000 --executor-memory ${MEM_WORKER}G --conf spark.executor.cores=${CORES}  --conf spark.cores.max=${NUM_MAX_CORES} --conf spark.shuffle.service.enabled=true --conf spark.executorEnv.LD_PRELOAD=${LD_PRELOAD} --conf spark.executorEnv.PYTHONHASHSEED=${PYTHONHASHSEED}"
 
-if [ "X${CONSTRAINTS}" != "" ]
+if [ "X${CONSTRAINTS}" != "X" ]
 then
   export SPARK_EXECUTOR_OPTS="${SPARK_EXECUTOR_OPTS} --conf spark.mesos.constraints=${CONSTRAINTS}"
 fi
@@ -180,7 +194,7 @@ export SPARK_PARAMETERS="${SPARK_PYTHON_OPTIONS} --conf=spark.eventLog.dir=/var/
 
 export LOCAL_SPARK_JAVA_OPTS="--conf spark.shuffle.service.enabled=true --conf spark.rpc.askTimeout=${TIMEOUT} --conf spark.network.timeout=${TIMEOUT}"
 
-if [ -f ${HOME}/etc/ssl/${SITE_NAME}-ipython-${USER}.pem -a -f ${HOME}/etc/ssl/${SITE_NAME}-ipython-${USER}.key ]
+if [ -f "${HOME}"/etc/ssl/"${SITE_NAME}-ipython-${USER}.pem" ] && [ -f "${HOME}"/etc/ssl/"${SITE_NAME}-ipython-${USER}.key" ]
 then
   PYSPARK_SSL_OPTIONS="--certfile=\"${HOME}/etc/ssl/${SITE_NAME}-ipython-${USER}.pem\" --keyfile=\"${HOME}/etc/ssl/${SITE_NAME}-ipython-${USER}.key\""
 else
@@ -191,8 +205,4 @@ export PYSPARK_DRIVER_PYTHON_OPTS="lab ${PYSPARK_SSL_OPTIONS} ${PYSPARK_CONFIG_F
 
 export SPARKR_SUBMIT_ARGS="${SPARK_PARAMETERS} ${LOCAL_SPARK_JAVA_OPTS} sparkr-shell "
 
-
-
-
-${SPARK_HOME}/bin/pyspark --name "${TASKNAME}:${SITE_NAME}" ${SPARK_PARAMETERS} ${LOCAL_SPARK_JAVA_OPTS}
-
+"${SPARK_HOME}/bin/pyspark" --name "${TASKNAME}:${SITE_NAME}" ${SPARK_PARAMETERS} ${LOCAL_SPARK_JAVA_OPTS}
