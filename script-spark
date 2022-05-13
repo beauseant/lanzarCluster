@@ -72,7 +72,7 @@ while getopts "C:c:n:T:V:F:M:H:L:G:N:t:W:D:S:P:J:" flag
         PARAMETERS="${OPTARG}"
         ;;
       *)
-        printf "Ppcion desconocida\n"
+        printf "Opcion desconocida\n"
         exit 255
         ;;
     esac
@@ -106,6 +106,10 @@ then
   SPARK_HOME=/opt/spark-${SVERSION}-bin-2.8.3
   HADOOP_VERSION=2.8.3
 elif [ -d /opt/spark-${SVERSION}-bin-3.3.0 ]
+then
+  SPARK_HOME=/opt/spark-${SVERSION}-bin-3.3.0
+  HADOOP_VERSION=3.3.0
+elif [ -d /opt/spark-${SVERSION}-bin-3.3.1 ]
 then
   SPARK_HOME=/opt/spark-${SVERSION}-bin-3.3.0
   HADOOP_VERSION=3.3.0
