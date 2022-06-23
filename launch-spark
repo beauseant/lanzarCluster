@@ -138,7 +138,7 @@ then
 elif [ -d /opt/spark-${SVERSION}-bin-3.3.1 ]
 then
   SPARK_HOME=/opt/spark-${SVERSION}-bin-3.3.1
-  HADOOP_VERSION=3.3.0
+  HADOOP_VERSION=3.3.1
 else
   printf "Imposible determinar version HADOOP\n"
   exit 255
