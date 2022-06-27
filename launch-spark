@@ -231,7 +231,7 @@ else
   PYSPARK_SSL_OPTIONS=""
 fi
 
-if [ $IS_JUPYTER ]
+if [ ${IS_JUPYTER} -eq 1 ]
 then
   export PYSPARK_DRIVER_PYTHON_OPTS="lab ${PYSPARK_SSL_OPTIONS} ${PYSPARK_CONFIG_FILE_OPT} --ip='0.0.0.0' --no-browser --notebook-dir='${RUNNING_DIRECTORY}/'"
   export SPARKR_SUBMIT_ARGS="${SPARK_PARAMETERS} ${LOCAL_SPARK_JAVA_OPTS} sparkr-shell "
