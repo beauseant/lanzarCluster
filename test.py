@@ -3,7 +3,8 @@ from typing import Tuple
 
 from pyspark.rdd import RDD
 from pyspark.sql import SparkSession
-from Utils import Forlayo
+#from Utils import Forlayo
+from includes import Utils
 import argparse
 
 
@@ -24,7 +25,7 @@ if __name__ == "__main__":
     arg = parser.parse_args()
 
 
-    utils = Forlayo ()
+    utils = Utils.Forlayo ()
     
     #rdd = sc.textFile('file:///export/usuarios01/sblanco/lanzarCluster/data/texto.txt')
     rdd = sc.textFile ( arg.path )
