@@ -88,6 +88,21 @@ La importante es http://hator05.tsc.uc3m.es:8888/lab, si ponemos esa dirección 
     sc = spark.sparkContext
 
 
+# 5) Comprobar ejecución.
+
+Para ver la ejecución de nuestro script debemos ir a una de las siguientes direcciones (probar la que funcione):
+   
+https://subserver1.tsc.uc3m.es:5050
+
+https://subserver2.tsc.uc3m.es:5050
+
+https://subserver3.tsc.uc3m.es:5050
+
+https://subserver4.tsc.uc3m.es:5050
+
+https://subserver5.tsc.uc3m.es:5050
+
+
 
 
 
