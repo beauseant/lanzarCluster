@@ -1,0 +1,13 @@
+Primero escribe el siguiente comando para crear un "acceso directo": 
+
+alias hdfs="/opt/hadoop/bin/hdfs --config /etc/hadoop dfs -fs hdfs://DTSCHDFSCluster"
+
+Ahora, para ver el contenido del hdfs: hdfs -ls /
+
+Crear un directorio hdfs -mkdir ruta
+
+Subir un fichero  hdfs -put origen destino
+
+Traer un fichero hdfs -get
+
+Semantic y OpenAire los he dejado en /export/ml4ds/
