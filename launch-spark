@@ -1,15 +1,13 @@
 #!/bin/bash
 CORES=64
 TIMEOUT=300
-SVERSION=3.4.0
+SVERSION=3.2.1
 PYSPARK_CONFIG_FILE_OPT=""
 MEMORY_MAX=0
 export MESOS_MASTER="mesos://zk://10.0.12.77:2181,10.0.12.78:2181,10.0.12.51:2181,10.0.12.60:2181,10.0.12.75:2181,10.0.12.76:2181,10.0.12.18:2181/mesos"
 MONGO_API=1
 SPARK_NLP=1
 PACKAGES_CMD=""
-DRIVER_MEMORY=20
-DRIVER_CORES=8
 HIVE_DB_PATH="${HOME}/.hive/"
 RUNNING_DIRECTORY="."
 export EXTRA_SPARK_CLASSPATH=""
@@ -22,21 +20,18 @@ MEM_WORKER=0
 IS_JUPYTER=0
 SCRIPT=""
 PARAMETERS=""
-PYTHON3_PATH=$( which python3 )
-JUPYTER_PATH=$( which jupyter )
+SCRIPT_NAME=$( basename "${0}" )
+if [ "${SCRIPT_NAME}" == "jupyter-spark" ]
+then
+  IS_JUPYTER=1
+fi
 
-while getopts "d:m:jC:c:n:T:V:F:H:G:N:t:W:D:X:J:M:L:S:P:" flag
+while getopts "jC:c:n:T:V:F:H:G:N:t:W:D:X:J:M:L:S:P:" flag
   do
     case $flag in
-        d)
-          DRIVER_CORES="${OPTARG}"
-        ;;
-        m)
-          DRIVER_MEMORY="${OPTARG}"
-        ;;
         j)
           IS_JUPYTER=1
-        ;;
+          ;;
         C)
           CREDENTIALFILE="${OPTARG}"
         ;;
@@ -106,7 +101,7 @@ if [ "${IS_JUPYTER}" == 1 ]
 then
   export PYSPARK_PYTHON=python3
   export PYSPARK_DRIVER_PYTHON=jupyter
-  export SPARK_PYTHON_OPTIONS="--conf spark.pyspark.python=${PYTHON3_PATH} --conf spark.pyspark.driver.python=${JUPYTER_PATH}"
+  export SPARK_PYTHON_OPTIONS="--conf spark.pyspark.python=/usr/bin/python3 --conf spark.pyspark.driver.python=/usr/bin/jupyter"
 fi
 
 if [ "${CREDENTIALFILE}X" != "X" ]
@@ -119,8 +114,6 @@ if [ ${MEM_WORKER} -eq 0 ]
 then
   MEM_WORKER=$(( 4 * ${CORES} ))
 fi
-
-printf "SPARK Version: ${SVERSION}\n"
 
 if [ -d /opt/spark-${SVERSION}-bin-2.6.0 ]
 then
@@ -160,7 +153,6 @@ export SPARK_DIST_CLASSPATH=$( /opt/hadoop/bin/hadoop classpath )
 
 if [ ! -d "${HIVE_DB_PATH}" ]
 then
-  printf "HIVE DB PATH %s\n" "${HIVE_DB_PATH}"
   mkdir -p "${HIVE_DB_PATH}"
 fi
 
@@ -212,11 +204,10 @@ else
   export MESOS_SECURITY="--conf spark.mesos.principal=${USER}"
 fi
 
-export LD_PRELOAD=/opt/intel/composerxe/compiler/lib/intel64/libiomp5.so:/opt/intel/composerxe/mkl/lib/intel64/libmkl_core.so:/opt/intel/composerxe/mkl/lib/intel64/libmkl_rt.so
 
-export SPARK_DRIVER_OPTS="--conf spark.driver.maxResultSize=${MEMORY_MAX} --conf spark.local.dir=/export/workdir/spark/tmp --driver-memory ${DRIVER_MEMORY}G --driver-cores ${DRIVER_CORES} --driver-class-path /etc/hadoop/hdfs-site.xml:/etc/hadoop/core-site.xml:/etc/hadoop --conf spark.sql.warehouse.dir=${HIVE_DB_PATH} --conf spark.mesos.role=${USER}"
+export SPARK_DRIVER_OPTS="--conf spark.driver.maxResultSize=${MEMORY_MAX} --conf spark.local.dir=/export/workdir/spark/tmp --driver-memory 20G --driver-cores 8 --driver-class-path /etc/hadoop/hdfs-site.xml:/etc/hadoop/core-site.xml:/etc/hadoop --conf spark.sql.warehouse.dir=${HIVE_DB_PATH} --conf spark.mesos.role=${USER}"
 
-export SPARK_EXECUTOR_OPTS="--conf spark.shuffle.io.connectionTimeout=180000 --executor-memory ${MEM_WORKER}G --conf spark.executor.cores=${CORES}  --conf spark.cores.max=${NUM_MAX_CORES} --conf spark.shuffle.service.enabled=true --conf spark.executorEnv.LD_PRELOAD=${LD_PRELOAD} --conf spark.executorEnv.PYTHONHASHSEED=${PYTHONHASHSEED}"
+export SPARK_EXECUTOR_OPTS="--conf spark.shuffle.io.connectionTimeout=180000 --executor-memory ${MEM_WORKER}G --conf spark.executor.cores=${CORES}  --conf spark.cores.max=${NUM_MAX_CORES} --conf spark.shuffle.service.enabled=true --conf spark.executorEnv.PYTHONHASHSEED=${PYTHONHASHSEED}"
 
 if [ "X${CONSTRAINTS}" != "X" ]
 then
